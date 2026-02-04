@@ -1,46 +1,59 @@
-# Projectivy Plugin : Wallpaper Provider
+# TV Background Suite - Projectivy Wallpaper Plugin
 
-This is a sample project for developing a wallpaper provider plugin for Projectivy Launcher.
-- /sample : sample code for the plugin service and its setting activity
-- /api : api used to communicate with Projectivy through AIDL (don't change it)
-- Version: 1
- 
-# Usage
-- Select "use this template" (right to the fork and start buttons) to fork this as a template
-- adapt the sample manifest according to your needs (at least modify the unique id)
-- customize the Wallpaper provider service and Settings fragment
+This is a custom **Wallpaper Provider Plugin** for [Projectivy Launcher](https://play.google.com/store/apps/details?id=com.spocky.projengmenu). It is explicitly designed to work with the **TV Background Suite** backend, which can be found here:
+**[https://github.com/z9m/androidtvbackgroundWebGui](https://github.com/z9m/androidtvbackgroundWebGui)**
 
-# Manifest parameters
-- apiVersion: api version used in your code. Projectivy will use it to detect if your plugin is compatible with its own code
-- uuid: unique id (format : UUID V4) used to identify your plugin. *You must generate one*
-- name: plugin name as displayed in Projectivy plugins list
-- settingsActivity: class name of your settings activity. Projectivy will launch it when users click on settings button
-- itemsCacheDurationMillis: how long should Projectivy keep the last wallpapers returned by this plugin before considering them expired
-- updateMode: int representing the events your plugin is interested in. This should be a combination of TIME_ELAPSED, NOW_PLAYING_CHANGED, CARD_FOCUSED, PROGRAM_CARD_FOCUSED, LAUNCHER_IDLE_MODE_CHANGED (check class WallpaperUpdateEventType)
+It allows you to display metadata-driven wallpapers (e.g., Movies, TV Shows) on your Android TV home screen, fetched from this compatible backend server (e.g., a Jellyfin/Emby wrapper).
 
-# How it works
-## Timer event
-For standard wallpaper providers such as the stock Reddit wallpaper provider, the wallpapers will change according to time events.
-First, Projectivy will request wallpaper(s) to the provider selected in the settings, and keep them in cache for itemsCacheDurationMillis.
-Then, each X minutes (depending on user settings), Projectivy will refresh the wallpaper by fetching a random one in its cache.
-When itemsCacheDurationMillis has expired, Projectivy will ask the plugin again.
+## Features
 
-## Other events
-Other events might lead to wallpaper requests if you set the corresponding updateMode (in that case, there is no cache on Projectivy side, these events are considered dynamic and only the provider knows how to react).
-- card focused: each time a card is focused (used by the stock "dynamic colors" wallpaper provider)
-- program card focused: each time a program card is focused (used by the stock "current focused program" wallpaper provider)
-- now playing changed: each time the "now playing" metadata has changed (could be used to set wallpaper according to the music currently playing)
-- launcher idle mode changed: when Projectivy enters/exits launcher idle mode
+*   **Dynamic Wallpapers**: Fetches high-quality wallpapers based on your collection layout.
+*   **Deep Linking (Play Button)**:
+    *   **Dual-Client Support**: Automatically detects if the **Moonfin** client (`org.moonfin.androidtv`) is installed and launches it with a specific intent.
+    *   **Fallback**: Falls back to the standard **Jellyfin** app if Moonfin is not present.
+*   **Customizable Filters**:
+    *   **Genre**: Filter content by genres (Action, Comedy, Drama, Sci-Fi, etc.).
+    *   **Age Rating**: Filter by age ratings (G, PG, R, FSK-0 to FSK-18, etc.).
+    *   **Sort Order**: Random, Newest (Year), or Best Rated.
+    *   **Layout/Collection**: dynamically selectable from the server.
+*   **Configurable Server**: Set your own backend URL directly from the settings interface.
 
-Each of these events will lead to a call to getWallpapers() depending on your updateMode. They will also provide this function an object containing details regarding this particular event (check the Event class for more details)
+## Installation & Setup
 
-# Hints
-- Be responsible : even though getWallpapers() isn't called from the UI thread, it doesn't mean you can waste precious device resources (keep in mind that many Android Tv devices have less memory or cpu power than most smartphones).
-- If you're fetching wallpapers from an external source, consider using an http cache to prevent flooding it with requests.
-- Don't request an update mode you won't use. This is particularly true with card focused events. Those requests might be sent each second or so when a user navigates in the launcher.
-- Take advantage of the itemsCacheDurationMillis to limit requests to your plugin and leverage Projectivy's cache (the stock "Reddit" wallpaper provider uses a 12h cache, meaning you will cycle through the same wallpapers for 12 hours before they are updated)
-- Don't send too many wallpapers to Projectivy: it will cache them and only use them for itemsCacheDurationMillis, so this will waste memory 
-- Respect authors : the wallpaper class allows you to define an author and source uri, fill them to give credit when possible
+1.  **Install the APK**: Install the `app-debug.apk` (Package: `com.butch708.projectivy.tvbgsuite`) on your Android TV device.
+2.  **Open Projectivy Launcher Settings**:
+    *   Go to **Settings** > **Appearance** > **Wallpaper**.
+3.  **Select Wallpaper Source**:
+    *   Click on **Wallpaper Source**.
+    *   Scroll down to **Plugins** and select **TV Background Suite** (or the name defined in the manifest).
+4.  **Configure**:
+    *   Click on the **Settings** (gear icon) next to the plugin name.
+    *   **Server URL**: Enter the URL of your **TV Background Suite** backend (e.g., `http://192.168.1.x:5000`).
+    *   **Collection / Layout**: Select which library/layout to fetch wallpapers from.
+    *   **Filters**: Adjust Genre, Sort Order, and Age Rating as desired.
+5.  **Enjoy**: Your background will now update based on your preferences.
 
-# Note
-This sample is provided as is. It is by no means perfect and should serve as a quick start.
+## Backend Requirements
+
+This plugin requires the **TV Background Suite** running on your network.
+Repository: [https://github.com/z9m/androidtvbackgroundWebGui](https://github.com/z9m/androidtvbackgroundWebGui)
+
+The backend provides the following REST API endpoints:
+
+*   `GET /api/layouts/list`: Returns a JSON list of available layouts/collections (List<String>).
+*   `GET /api/wallpaper/status`: Returns a JSON object with:
+    *   `imageUrl` (String): URL of the wallpaper image.
+    *   `actionUrl` (String): Deep link URL (e.g., `jellyfin://items/xyz`).
+    *   Query parameters supported: `layout`, `genre`, `sort`, `age`.
+
+## Development
+
+*   **Package Name**: `com.butch708.projectivy.tvbgsuite`
+*   **Architecture**:
+    *   **Service**: `WallpaperProviderService` handles the communication with Projectivy and fetches data via Retrofit.
+    *   **UI**: `SettingsActivity` and `SettingsFragment` (using Leanback `GuidedStepSupportFragment`) provide the TV-optimized configuration interface.
+    *   **Deep Linking**: Custom logic in `WallpaperProviderService` parses Jellyfin URIs to support specific client intents.
+
+## License
+
+Based on the [Projectivy Plugin Sample](https://github.com/spocky/projectivy-plugin-wallpaper-provider).
