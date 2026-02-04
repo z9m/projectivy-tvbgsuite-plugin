@@ -1,0 +1,161 @@
+package tv.projectivy.plugin.wallpaperprovider.sample
+
+import android.content.Context
+import android.content.SharedPreferences
+import android.util.Log
+import androidx.preference.PreferenceManager
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.float
+import kotlinx.serialization.json.floatOrNull
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
+import kotlinx.serialization.json.longOrNull
+import kotlin.collections.all
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.collections.forEach
+import kotlin.collections.mapTo
+
+object PreferencesManager {
+    private const val IMAGE_URL_KEY = "image_url_key"
+    private const val SERVER_URL_KEY = "server_url_key"
+    private const val SELECTED_LAYOUT_KEY = "selected_layout_key"
+    private const val GENRE_FILTER_KEY = "genre_filter_key"
+    private const val SORT_ORDER_KEY = "sort_order_key"
+    private const val AGE_FILTER_KEY = "age_filter_key"
+
+    lateinit var preferences: SharedPreferences
+
+    fun init(context: Context) {
+        preferences = PreferenceManager.getDefaultSharedPreferences(context)
+    }
+
+    private inline fun SharedPreferences.edit(operation: (SharedPreferences.Editor) -> Unit) {
+        val editor = this.edit()
+        operation(editor)
+        editor.apply()
+    }
+
+    operator fun set(key: String, value: Any?) =
+        when (value) {
+            is String? -> preferences.edit { it.putString(key, value) }
+            is Int -> preferences.edit { it.putInt(key, value) }
+            is Boolean -> preferences.edit { it.putBoolean(key, value) }
+            is Float -> preferences.edit { it.putFloat(key, value) }
+            is Long -> preferences.edit { it.putLong(key, value) }
+            else -> throw UnsupportedOperationException("Not yet implemented")
+        }
+
+    inline operator fun <reified T : Any> get(
+        key: String,
+        defaultValue: T? = null
+    ): T =
+        when (T::class) {
+            String::class -> preferences.getString(key, defaultValue as String? ?: "") as T
+            Int::class -> preferences.getInt(key, defaultValue as? Int ?: -1) as T
+            Boolean::class -> preferences.getBoolean(key, defaultValue as? Boolean ?: false) as T
+            Float::class -> preferences.getFloat(key, defaultValue as? Float ?: -1f) as T
+            Long::class -> preferences.getLong(key, defaultValue as? Long ?: -1) as T
+            else -> throw UnsupportedOperationException("Not yet implemented")
+        }
+
+    var imageUrl: String
+        get() = PreferencesManager[IMAGE_URL_KEY, "https://images.pexels.com/photos/462162/pexels-photo-462162.jpeg"]
+        set(value) { PreferencesManager[IMAGE_URL_KEY]=value }
+
+    var serverUrl: String
+        get() = PreferencesManager[SERVER_URL_KEY, "http://192.168.1.100:5000"]
+        set(value) { PreferencesManager[SERVER_URL_KEY] = value }
+
+    var selectedLayout: String
+        get() = PreferencesManager[SELECTED_LAYOUT_KEY, "default"]
+        set(value) { PreferencesManager[SELECTED_LAYOUT_KEY] = value }
+
+    var genreFilter: String
+        get() = PreferencesManager[GENRE_FILTER_KEY, ""]
+        set(value) { PreferencesManager[GENRE_FILTER_KEY] = value }
+
+    var sortOrder: String
+        get() = PreferencesManager[SORT_ORDER_KEY, "Random"]
+        set(value) { PreferencesManager[SORT_ORDER_KEY] = value }
+
+    var ageFilter: String
+        get() = PreferencesManager[AGE_FILTER_KEY, ""]
+        set(value) { PreferencesManager[AGE_FILTER_KEY] = value }
+
+    fun export(): String {
+        return convertSharedPreferencesToJson(preferences)
+    }
+
+    fun import(prefs: String): Boolean {
+        try {
+            importPreferencesFromJson(preferences, prefs)
+        } catch (e: Exception) {
+            Log.e("import", "Error importing preferences", e)
+            return false
+        }
+        return true
+    }
+
+    private fun convertSharedPreferencesToJson(sharedPreferences: SharedPreferences): String {
+        val prefsJsonObject = buildJsonObject {
+            sharedPreferences.all.forEach { (key, value) ->
+                when (value) {
+                    is Int -> put(key, JsonPrimitive(value))
+                    is Long -> put(key, JsonPrimitive(value))
+                    is Float -> put(key, JsonPrimitive(value))
+                    is Boolean -> put(key, JsonPrimitive(value))
+                    is String -> put(key, JsonPrimitive(value))
+                    is Set<*> -> if (value.all { it is String }) {
+                        put(key, JsonArray(value.map { JsonPrimitive(it as String) }))
+                    } else {
+                        throw IllegalArgumentException("Unsupported set type")
+                    }
+                    else -> throw IllegalArgumentException("Unsupported preference type ${value?.javaClass} for key $key")
+                }
+            }
+        }
+        return prefsJsonObject.toString()
+    }
+
+    private fun importPreferencesFromJson(sharedPreferences: SharedPreferences, jsonString: String) {
+        val jsonElement = Json.parseToJsonElement(jsonString)
+
+        if (jsonElement is JsonObject) {
+            val editor = sharedPreferences.edit()
+            jsonElement.forEach { (key, value) ->
+                when (value) {
+                    is JsonPrimitive -> {
+                        when {
+                            value.isString -> editor.putString(key, value.content)
+                            value.booleanOrNull != null -> editor.putBoolean(key, value.boolean)
+                            value.intOrNull != null -> editor.putInt(key, value.int)
+                            value.floatOrNull != null -> editor.putFloat(key, value.float)
+                            value.longOrNull != null -> editor.putLong(key, value.long)
+                        }
+                    }
+
+                    is JsonArray -> {
+                         if (value.all { it is JsonPrimitive && it.isString }) {
+                             val set = value.mapTo(mutableSetOf()) { it.jsonPrimitive.content }
+                             editor.putStringSet(key, set)
+                         }
+                    }
+
+                    else -> throw IllegalArgumentException("Unsupported JSON element type for key $key")
+                }
+            }
+            editor.apply()
+        } else {
+            throw IllegalArgumentException("Expected JSON object for preferences import")
+        }
+    }
+}

@@ -1,0 +1,12 @@
+<resources>
+    <string name="plugin_name">TV Background Suite</string>
+    <string name="plugin_description">Fetches wallpapers and deep links from a custom metadata server.</string>
+    <string name="plugin_uuid">d4c5d8e9-1b2a-4c3d-8e9f-0a1b2c3d4e5f</string>
+
+    <string name="projectivy_not_installed">Warning, this plugin requires Projectivy Launcher which does not seem to be installed.</string>
+
+    <!-- Setting parameters -->
+    <string name="settings">Settings</string>
+    <string name="setting_image_url_title">Image URL</string>
+
+</resources>
