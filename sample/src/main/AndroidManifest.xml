@@ -27,16 +27,39 @@
         android:usesCleartextTraffic="true"
         android:theme="@style/Theme.ProjectivyWallpaperProvider">
 
-        <!-- Settings Activity: Exported and with launcher intent for testing -->
         <activity
             android:name="tv.projectivy.plugin.wallpaperprovider.sample.SettingsActivity"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
         </activity>
 
+        <activity-alias
+            android:name=".ProjectivySettingsAlias"
+            android:enabled="true"
+            android:exported="true"
+            android:targetActivity="tv.projectivy.plugin.wallpaperprovider.sample.SettingsActivity" />
+
+        <!-- ContentProvider for dynamic events like idle mode changed -->
+        <provider
+            android:name="tv.projectivy.plugin.wallpaperprovider.sample.WallpaperProvider"
+            android:authorities="com.butch708.projectivy.tvbgsuite.wallpaper"
+            android:exported="true">
+            <meta-data
+                android:name="updateMode"
+                android:value="17" />
+            <meta-data
+                android:name="tv.projectivy.launcher.wallpaper.updateMode"
+                android:value="17" />
+            <meta-data
+                android:name="itemsCacheDurationMillis"
+                android:value="1000"/>
+        </provider>
+
+        <!-- Wallpaper Provider Service for time-based updates and receiving refresh requests -->
         <service
             android:name="tv.projectivy.plugin.wallpaperprovider.sample.WallpaperProviderService"
             android:exported="true"
@@ -45,40 +68,37 @@
             android:banner="@mipmap/ic_banner"
             tools:ignore="ExportedService">
 
-            <!-- Mandatory for the plugin to be detected by Projectivy -->
             <intent-filter>
                 <action android:name="tv.projectivy.plugin.WALLPAPER_PROVIDER"/>
             </intent-filter>
 
-            <!-- Api version this plugin is compatible with -->
             <meta-data
                 android:name="apiVersion"
                 android:value="1"/>
 
-            <!--Plugin UUID -->
             <meta-data
                 android:name="uuid"
                 android:value="@string/plugin_uuid"/>
 
-            <!-- Plugin name -->
             <meta-data
                 android:name="name"
                 android:value="@string/plugin_name"/>
 
-            <!-- Plugin activity called by Projectivy to configure it -->
             <meta-data
                 android:name="settingsActivity"
-                android:value="tv.projectivy.plugin.wallpaperprovider.sample.SettingsActivity"/>
+                android:value=".ProjectivySettingsAlias"/>
 
-            <!-- How long should Projectivy keep wallpapers before a new request -->
             <meta-data
-                android:name="itemsCacheDurationMillis"
-                android:value="@integer/items_cache_duration_millis"/>
+                android:name="authority"
+                android:value="com.butch708.projectivy.tvbgsuite.wallpaper"/>
 
-            <!-- Update mode -->
+            <!-- Service only reacts to TimeElapsed (1) -->
             <meta-data
                 android:name="updateMode"
-                android:value="17"/>
+                android:value="1"/>
+            <meta-data
+                android:name="tv.projectivy.launcher.wallpaper.updateMode"
+                android:value="1" />
         </service>
 
     </application>

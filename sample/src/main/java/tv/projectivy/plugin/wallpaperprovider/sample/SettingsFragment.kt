@@ -31,6 +31,7 @@ class SettingsFragment : GuidedStepSupportFragment() {
         private const val ACTION_ID_YEAR = 6L
         private const val ACTION_ID_RATING = 7L
         private const val ACTION_ID_MAX_RATING = 8L
+        private const val ACTION_ID_EVENT_IDLE = 9L
         
         private val DEFAULT_GENRES = listOf(
             "Action", "Adventure", "Animation", "Comedy", "Crime",
@@ -62,72 +63,83 @@ class SettingsFragment : GuidedStepSupportFragment() {
     }
 
     override fun onCreateActions(actions: MutableList<GuidedAction>, savedInstanceState: Bundle?) {
-        PreferencesManager.init(requireContext())
+        try {
+            PreferencesManager.init(requireContext())
 
-        val serverUrl = PreferencesManager.serverUrl
-        val selectedLayout = PreferencesManager.selectedLayout
-        val genreFilter = PreferencesManager.genreFilter
-        val ageFilter = PreferencesManager.ageFilter
-        val yearFilter = PreferencesManager.yearFilter
-        val minRating = PreferencesManager.minRating
-        val maxRating = PreferencesManager.maxRating
+            val serverUrl = PreferencesManager.serverUrl
+            val selectedLayout = PreferencesManager.selectedLayout
+            val genreFilter = PreferencesManager.genreFilter
+            val ageFilter = PreferencesManager.ageFilter
+            val yearFilter = PreferencesManager.yearFilter
+            val minRating = PreferencesManager.minRating
+            val maxRating = PreferencesManager.maxRating
+            val refreshOnIdle = PreferencesManager.refreshOnIdleExit
 
-        // Server URL
-        actions.add(GuidedAction.Builder(context)
-            .id(ACTION_ID_SERVER_URL)
-            .title("Server URL")
-            .description(if (serverUrl.isNotEmpty()) serverUrl else "http://...")
-            .editDescription(serverUrl)
-            .descriptionEditable(true)
-            .build())
+            // Server URL
+            actions.add(GuidedAction.Builder(context)
+                .id(ACTION_ID_SERVER_URL)
+                .title("Server URL")
+                .description(if (serverUrl.isNotEmpty()) serverUrl else "http://...")
+                .editDescription(serverUrl)
+                .descriptionEditable(true)
+                .build())
 
-        // Layout / Collection
-        actions.add(GuidedAction.Builder(context)
-            .id(ACTION_ID_LAYOUT)
-            .title("Collection / Layout")
-            .description(selectedLayout)
-            .subActions(emptyList()) 
-            .build())
+            // Layout / Collection
+            actions.add(GuidedAction.Builder(context)
+                .id(ACTION_ID_LAYOUT)
+                .title("Collection / Layout")
+                .description(selectedLayout)
+                .subActions(emptyList()) 
+                .build())
 
-        // Genre Filter
-        actions.add(GuidedAction.Builder(context)
-            .id(ACTION_ID_GENRE)
-            .title("Genre Filter")
-            .description(if (genreFilter.isNotEmpty()) genreFilter else "All")
-            // No subActions here, will be handled by MultiSelectFragment
-            .build())
+            // Genre Filter
+            actions.add(GuidedAction.Builder(context)
+                .id(ACTION_ID_GENRE)
+                .title("Genre Filter")
+                .description(if (genreFilter.isNotEmpty()) genreFilter else "All")
+                .build())
 
-        // Age Rating
-        actions.add(GuidedAction.Builder(context)
-            .id(ACTION_ID_AGE)
-            .title("Age Rating")
-            .description(if (ageFilter.isNotEmpty()) ageFilter else "Any")
-            // No subActions here, will be handled by MultiSelectFragment
-            .build())
+            // Age Rating
+            actions.add(GuidedAction.Builder(context)
+                .id(ACTION_ID_AGE)
+                .title("Age Rating")
+                .description(if (ageFilter.isNotEmpty()) ageFilter else "Any")
+                .build())
 
-        // Year Filter
-        actions.add(GuidedAction.Builder(context)
-            .id(ACTION_ID_YEAR)
-            .title("Year Filter")
-            .description(if (yearFilter.isNotEmpty()) yearFilter else "Any")
-            // No subActions here, will be handled by YearPickerFragment
-            .build())
+            // Year Filter
+            actions.add(GuidedAction.Builder(context)
+                .id(ACTION_ID_YEAR)
+                .title("Year Filter")
+                .description(if (yearFilter.isNotEmpty()) yearFilter else "Any")
+                .build())
 
-        // Rating Filter
-        actions.add(GuidedAction.Builder(context)
-            .id(ACTION_ID_RATING)
-            .title("Minimum Rating")
-            .description(getStarsString(minRating))
-            .subActions(createRatingSubActions(minRating, 2))
-            .build())
+            // Rating Filter
+            actions.add(GuidedAction.Builder(context)
+                .id(ACTION_ID_RATING)
+                .title("Minimum Rating")
+                .description(getStarsString(minRating))
+                .subActions(createRatingSubActions(minRating, 2))
+                .build())
 
-        // Max Rating Filter
-        actions.add(GuidedAction.Builder(context)
-            .id(ACTION_ID_MAX_RATING)
-            .title("Maximum Rating")
-            .description(getStarsString(maxRating))
-            .subActions(createRatingSubActions(maxRating, 3))
-            .build())
+            // Max Rating Filter
+            actions.add(GuidedAction.Builder(context)
+                .id(ACTION_ID_MAX_RATING)
+                .title("Maximum Rating")
+                .description(getStarsString(maxRating))
+                .subActions(createRatingSubActions(maxRating, 3))
+                .build())
+
+            // Events Section
+            actions.add(GuidedAction.Builder(context)
+                .id(ACTION_ID_EVENT_IDLE)
+                .title("Refresh on idle exit")
+                .checkSetId(GuidedAction.CHECKBOX_CHECK_SET_ID)
+                .checked(refreshOnIdle)
+                .build())
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Error creating actions", e)
+        }
     }
 
     override fun onResume() {
@@ -394,7 +406,12 @@ class SettingsFragment : GuidedStepSupportFragment() {
                         .commit()
                 }
             }
-            // ACTION_ID_RATING and ACTION_ID_MAX_RATING are handled automatically because they have subActions
+            ACTION_ID_EVENT_IDLE -> {
+                val newState = !PreferencesManager.refreshOnIdleExit
+                PreferencesManager.refreshOnIdleExit = newState
+                action.isChecked = newState
+                notifyActionChanged(findActionPositionById(ACTION_ID_EVENT_IDLE))
+            }
         }
     }
 

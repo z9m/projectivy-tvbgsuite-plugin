@@ -32,11 +32,11 @@ sealed class Event(open val eventType: Int) : Parcelable {
             parcel.setDataPosition(initialDataPosition)   // reset position to let the specialized CREATOR read from start
 
             return when(eventType) {
-                TIME_ELAPSED -> createEventFromParcel(parcel, TimeElapsed::class.java)
-                NOW_PLAYING_CHANGED -> createEventFromParcel(parcel, NowPlayingChanged::class.java)
-                CARD_FOCUSED -> createEventFromParcel(parcel, CardFocused::class.java)
-                PROGRAM_CARD_FOCUSED -> createEventFromParcel(parcel, ProgramCardFocused::class.java)
-                LAUNCHER_IDLE_MODE_CHANGED -> createEventFromParcel(parcel, LauncherIdleModeChanged::class.java)
+                TIME_ELAPSED -> createEventFromParcel<TimeElapsed>(parcel, TimeElapsed::class.java)
+                NOW_PLAYING_CHANGED -> createEventFromParcel<NowPlayingChanged>(parcel, NowPlayingChanged::class.java)
+                CARD_FOCUSED -> createEventFromParcel<CardFocused>(parcel, CardFocused::class.java)
+                PROGRAM_CARD_FOCUSED -> createEventFromParcel<ProgramCardFocused>(parcel, ProgramCardFocused::class.java)
+                LAUNCHER_IDLE_MODE_CHANGED -> createEventFromParcel<LauncherIdleModeChanged>(parcel, LauncherIdleModeChanged::class.java)
                 else -> null
             }
         }
@@ -46,6 +46,7 @@ sealed class Event(open val eventType: Int) : Parcelable {
         private fun <T> createEventFromParcel(parcel: Parcel, clazz: Class<T>): T {
             val creatorField = clazz.getField("CREATOR")
             val creator = creatorField.get(null) as Parcelable.Creator<*>
+            @Suppress("UNCHECKED_CAST")
             return creator.createFromParcel(parcel) as T
         }
     }

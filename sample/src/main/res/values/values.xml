@@ -7,4 +7,7 @@
     <integer name="update_mode_card_focused">4</integer>
     <integer name="update_mode_program_card_focused">8</integer>
     <integer name="update_mode_launcher_idle_mode_changed">16</integer>
+
+    <!-- Sum of ALL modes (31) -->
+    <integer name="wallpaper_update_mode">31</integer>
 </resources>

@@ -33,11 +33,16 @@ object PreferencesManager {
     private const val YEAR_FILTER_KEY = "year_filter_key"
     private const val MIN_RATING_KEY = "pref_min_rating"
     private const val MAX_RATING_KEY = "pref_max_rating"
+    private const val REFRESH_ON_IDLE_EXIT_KEY = "pref_refresh_on_idle_exit"
+    private const val LAST_WALLPAPER_URI_KEY = "last_wallpaper_uri"
+    private const val LAST_WALLPAPER_AUTHOR_KEY = "last_wallpaper_author"
 
     lateinit var preferences: SharedPreferences
 
     fun init(context: Context) {
-        preferences = PreferenceManager.getDefaultSharedPreferences(context)
+        if (!::preferences.isInitialized) {
+            preferences = PreferenceManager.getDefaultSharedPreferences(context)
+        }
     }
 
     private inline fun SharedPreferences.edit(operation: (SharedPreferences.Editor) -> Unit) {
@@ -46,7 +51,7 @@ object PreferencesManager {
         editor.apply()
     }
 
-    operator fun set(key: String, value: Any?) =
+    operator fun set(key: String, value: Any?) {
         when (value) {
             is String? -> preferences.edit { it.putString(key, value) }
             is Int -> preferences.edit { it.putInt(key, value) }
@@ -55,6 +60,7 @@ object PreferencesManager {
             is Long -> preferences.edit { it.putLong(key, value) }
             else -> throw UnsupportedOperationException("Not yet implemented")
         }
+    }
 
     inline operator fun <reified T : Any> get(
         key: String,
@@ -100,6 +106,18 @@ object PreferencesManager {
     var maxRating: Float
         get() = PreferencesManager[MAX_RATING_KEY, 10.0f]
         set(value) { PreferencesManager[MAX_RATING_KEY] = value }
+
+    var refreshOnIdleExit: Boolean
+        get() = PreferencesManager[REFRESH_ON_IDLE_EXIT_KEY, true]
+        set(value) { PreferencesManager[REFRESH_ON_IDLE_EXIT_KEY] = value }
+
+    var lastWallpaperUri: String
+        get() = PreferencesManager[LAST_WALLPAPER_URI_KEY, ""]
+        set(value) { PreferencesManager[LAST_WALLPAPER_URI_KEY] = value }
+
+    var lastWallpaperAuthor: String
+        get() = PreferencesManager[LAST_WALLPAPER_AUTHOR_KEY, ""]
+        set(value) { PreferencesManager[LAST_WALLPAPER_AUTHOR_KEY] = value }
 
     fun export(): String {
         return convertSharedPreferencesToJson(preferences)

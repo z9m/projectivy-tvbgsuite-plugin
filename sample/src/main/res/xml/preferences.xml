@@ -24,4 +24,14 @@
 
     </androidx.preference.PreferenceCategory>
 
+    <androidx.preference.PreferenceCategory
+        app:title="Events">
+
+        <SwitchPreferenceCompat
+            app:key="pref_refresh_on_idle_exit"
+            app:title="Refresh on idle exit"
+            app:defaultValue="true" />
+
+    </androidx.preference.PreferenceCategory>
+
 </androidx.preference.PreferenceScreen>
