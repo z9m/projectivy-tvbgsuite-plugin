@@ -1,6 +1,7 @@
 package tv.projectivy.plugin.wallpaperprovider.sample
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.leanback.app.GuidedStepSupportFragment
@@ -17,11 +18,25 @@ import com.butch708.projectivy.tvbgsuite.R
 class SettingsFragment : GuidedStepSupportFragment() {
 
     companion object {
+        private const val TAG = "SettingsFragment"
         private const val ACTION_ID_SERVER_URL = 1L
         private const val ACTION_ID_LAYOUT = 2L
         private const val ACTION_ID_GENRE = 3L
         private const val ACTION_ID_SORT = 4L
         private const val ACTION_ID_AGE = 5L
+
+        private val DEFAULT_GENRES = listOf(
+            "Action", "Adventure", "Animation", "Comedy", "Crime",
+            "Documentary", "Drama", "Family", "Fantasy", "History", "Horror",
+            "Music", "Mystery", "Romance", "Science Fiction", "TV Movie",
+            "Thriller", "War", "Western"
+        )
+
+        private val DEFAULT_AGE_RATINGS = listOf(
+            "G", "PG", "PG-13", "R", "NC-17",
+            "TV-Y", "TV-Y7", "TV-G", "TV-PG", "TV-14", "TV-MA",
+            "FSK-0", "FSK-6", "FSK-12", "FSK-16", "FSK-18"
+        )
     }
 
     override fun onCreateGuidance(savedInstanceState: Bundle?): Guidance {
@@ -60,12 +75,9 @@ class SettingsFragment : GuidedStepSupportFragment() {
             .build())
 
         // Genre Filter
-        val genreOptions = listOf(
-            "All", "Action", "Adventure", "Animation", "Comedy", "Crime",
-            "Documentary", "Drama", "Family", "Fantasy", "History", "Horror",
-            "Music", "Mystery", "Romance", "Science Fiction", "TV Movie",
-            "Thriller", "War", "Western"
-        )
+        val genreOptions = mutableListOf("All")
+        genreOptions.addAll(DEFAULT_GENRES)
+        
         val genreSubActions = genreOptions.mapIndexed { index, option ->
             GuidedAction.Builder(context)
                 .id(2000L + index)
@@ -101,11 +113,9 @@ class SettingsFragment : GuidedStepSupportFragment() {
             .build())
 
         // Age Rating
-        val ageOptions = listOf(
-            "Any", "G", "PG", "PG-13", "R", "NC-17",
-            "TV-Y", "TV-Y7", "TV-G", "TV-PG", "TV-14", "TV-MA",
-            "FSK-0", "FSK-6", "FSK-12", "FSK-16", "FSK-18"
-        )
+        val ageOptions = mutableListOf("Any")
+        ageOptions.addAll(DEFAULT_AGE_RATINGS)
+        
         val ageSubActions = ageOptions.mapIndexed { index, option ->
             GuidedAction.Builder(context)
                 .id(3000L + index)
@@ -125,35 +135,67 @@ class SettingsFragment : GuidedStepSupportFragment() {
 
     override fun onResume() {
         super.onResume()
-        refreshLayouts()
+        refreshAllData()
     }
 
-    private fun refreshLayouts() {
+    private fun refreshAllData() {
         val serverUrl = PreferencesManager.serverUrl
         if (serverUrl.isBlank()) return
-
-        try {
-            val retrofit = Retrofit.Builder()
+        
+        val apiService = try {
+            Retrofit.Builder()
                 .baseUrl(serverUrl)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
-
-            val apiService = retrofit.create(ApiService::class.java)
-            apiService.getLayouts().enqueue(object : Callback<List<String>> {
-                override fun onResponse(call: Call<List<String>>, response: Response<List<String>>) {
-                    if (response.isSuccessful) {
-                        val layouts = response.body() ?: emptyList()
-                        updateLayoutAction(layouts)
-                    }
-                }
-
-                override fun onFailure(call: Call<List<String>>, t: Throwable) {
-                    // Ignore
-                }
-            })
+                .create(ApiService::class.java)
         } catch (e: Exception) {
             e.printStackTrace()
-        }
+            null
+        } ?: return
+
+        apiService.getLayouts().enqueue(object : Callback<List<String>> {
+            override fun onResponse(call: Call<List<String>>, response: Response<List<String>>) {
+                if (response.isSuccessful) {
+                    val layouts = response.body() ?: emptyList()
+                    updateLayoutAction(layouts)
+                }
+            }
+            override fun onFailure(call: Call<List<String>>, t: Throwable) {
+                Log.e(TAG, "Failed to fetch layouts", t)
+            }
+        })
+
+        apiService.getGenres().enqueue(object : Callback<List<String>> {
+            override fun onResponse(call: Call<List<String>>, response: Response<List<String>>) {
+                if (response.isSuccessful) {
+                    val genres = response.body() ?: emptyList()
+                    if (genres.isNotEmpty()) {
+                        updateGenreAction(genres)
+                    } else {
+                        Log.w(TAG, "Fetched empty genre list, keeping defaults")
+                    }
+                }
+            }
+            override fun onFailure(call: Call<List<String>>, t: Throwable) {
+                Log.e(TAG, "Failed to fetch genres", t)
+            }
+        })
+
+        apiService.getAgeRatings().enqueue(object : Callback<List<String>> {
+            override fun onResponse(call: Call<List<String>>, response: Response<List<String>>) {
+                if (response.isSuccessful) {
+                    val ages = response.body() ?: emptyList()
+                    if (ages.isNotEmpty()) {
+                        updateAgeRatingAction(ages)
+                    } else {
+                         Log.w(TAG, "Fetched empty age list, keeping defaults")
+                    }
+                }
+            }
+            override fun onFailure(call: Call<List<String>>, t: Throwable) {
+                Log.e(TAG, "Failed to fetch age ratings", t)
+            }
+        })
     }
 
     private fun updateLayoutAction(layouts: List<String>) {
@@ -171,6 +213,52 @@ class SettingsFragment : GuidedStepSupportFragment() {
             }
             layoutAction.subActions = subActions
             notifyActionChanged(layoutActionIndex)
+        }
+    }
+
+    private fun updateGenreAction(genres: List<String>) {
+        val actions = actions
+        val genreActionIndex = actions.indexOfFirst { it.id == ACTION_ID_GENRE }
+        if (genreActionIndex != -1) {
+            val genreAction = actions[genreActionIndex]
+            val genreOptions = mutableListOf("All")
+            genreOptions.addAll(genres)
+            
+            val genreFilter = PreferencesManager.genreFilter
+
+            val subActions = genreOptions.mapIndexed { index, option ->
+                GuidedAction.Builder(context)
+                    .id(2000L + index)
+                    .title(option)
+                    .checkSetId(3)
+                    .checked(option == genreFilter || (option == "All" && genreFilter.isEmpty()))
+                    .build()
+            }
+            genreAction.subActions = subActions
+            notifyActionChanged(genreActionIndex)
+        }
+    }
+
+    private fun updateAgeRatingAction(ages: List<String>) {
+        val actions = actions
+        val ageActionIndex = actions.indexOfFirst { it.id == ACTION_ID_AGE }
+        if (ageActionIndex != -1) {
+            val ageAction = actions[ageActionIndex]
+            val ageOptions = mutableListOf("Any")
+            ageOptions.addAll(ages)
+            
+            val ageFilter = PreferencesManager.ageFilter
+
+            val subActions = ageOptions.mapIndexed { index, option ->
+                GuidedAction.Builder(context)
+                    .id(3000L + index)
+                    .title(option)
+                    .checkSetId(4)
+                    .checked(option == ageFilter || (option == "Any" && ageFilter.isEmpty()))
+                    .build()
+            }
+            ageAction.subActions = subActions
+            notifyActionChanged(ageActionIndex)
         }
     }
 
@@ -243,12 +331,12 @@ class SettingsFragment : GuidedStepSupportFragment() {
                 PreferencesManager.serverUrl = params.toString()
                 findActionById(ACTION_ID_SERVER_URL)?.description = params
                 notifyActionChanged(findActionPositionById(ACTION_ID_SERVER_URL))
-                refreshLayouts()
+                refreshAllData()
                 notifySettingsChanged()
             }
             ACTION_ID_LAYOUT -> {
                 if (action.subActions.isNullOrEmpty()) {
-                    refreshLayouts()
+                    refreshAllData()
                     Toast.makeText(context, "Fetching layouts...", Toast.LENGTH_SHORT).show()
                 }
             }

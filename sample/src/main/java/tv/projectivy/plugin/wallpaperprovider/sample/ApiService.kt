@@ -20,4 +20,10 @@ interface ApiService {
 
     @GET("/api/layouts/list")
     fun getLayouts(): Call<List<String>>
+
+    @GET("/api/genres/list")
+    fun getGenres(): Call<List<String>>
+
+    @GET("/api/ages/list")
+    fun getAgeRatings(): Call<List<String>>
 }

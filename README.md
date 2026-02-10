@@ -12,10 +12,10 @@ It allows you to display metadata-driven wallpapers (e.g., Movies, TV Shows) on 
     *   **Dual-Client Support**: Automatically detects if the **Moonfin** client (`org.moonfin.androidtv`) is installed and launches it with a specific intent.
     *   **Fallback**: Falls back to the standard **Jellyfin** app if Moonfin is not present.
 *   **Customizable Filters**:
-    *   **Genre**: Filter content by genres (Action, Comedy, Drama, Sci-Fi, etc.).
-    *   **Age Rating**: Filter by age ratings (G, PG, R, FSK-0 to FSK-18, etc.).
+    *   **Genre**: Filter content by genres (Action, Comedy, Drama, Sci-Fi, etc.), fetched dynamically from the server.
+    *   **Age Rating**: Filter by age ratings (G, PG, R, FSK, etc.), fetched dynamically from the server.
     *   **Sort Order**: Random, Newest (Year), or Best Rated.
-    *   **Layout/Collection**: dynamically selectable from the server.
+    *   **Layout/Collection**: Dynamically selectable from the server.
 *   **Configurable Server**: Set your own backend URL directly from the settings interface.
 
 ## Installation & Setup
@@ -41,6 +41,8 @@ Repository: [https://github.com/z9m/androidtvbackgroundWebGui](https://github.co
 The backend provides the following REST API endpoints:
 
 *   `GET /api/layouts/list`: Returns a JSON list of available layouts/collections (List<String>).
+*   `GET /api/genres/list`: Returns a JSON list of available genres (List<String>).
+*   `GET /api/ages/list`: Returns a JSON list of available age ratings (List<String>).
 *   `GET /api/wallpaper/status`: Returns a JSON object with:
     *   `imageUrl` (String): URL of the wallpaper image.
     *   `actionUrl` (String): Deep link URL (e.g., `jellyfin://items/xyz`).
