@@ -43,23 +43,23 @@
             android:exported="true"
             android:targetActivity="tv.projectivy.plugin.wallpaperprovider.sample.SettingsActivity" />
 
-        <!-- ContentProvider for dynamic events like idle mode changed -->
+        <!-- ContentProvider ONLY for Idle Mode Changed (16) -->
         <provider
             android:name="tv.projectivy.plugin.wallpaperprovider.sample.WallpaperProvider"
             android:authorities="com.butch708.projectivy.tvbgsuite.wallpaper"
             android:exported="true">
             <meta-data
                 android:name="updateMode"
-                android:value="17" />
+                android:value="16" />
             <meta-data
                 android:name="tv.projectivy.launcher.wallpaper.updateMode"
-                android:value="17" />
+                android:value="16" />
             <meta-data
                 android:name="itemsCacheDurationMillis"
-                android:value="1000"/>
+                android:value="0"/>
         </provider>
 
-        <!-- Wallpaper Provider Service for time-based updates and receiving refresh requests -->
+        <!-- Wallpaper Provider Service ONLY for Time Elapsed (1) -->
         <service
             android:name="tv.projectivy.plugin.wallpaperprovider.sample.WallpaperProviderService"
             android:exported="true"
@@ -92,7 +92,10 @@
                 android:name="authority"
                 android:value="com.butch708.projectivy.tvbgsuite.wallpaper"/>
 
-            <!-- Service only reacts to TimeElapsed (1) -->
+            <meta-data
+                android:name="itemsCacheDurationMillis"
+                android:value="1000"/>
+
             <meta-data
                 android:name="updateMode"
                 android:value="1"/>
