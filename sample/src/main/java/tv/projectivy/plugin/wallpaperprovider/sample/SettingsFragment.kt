@@ -144,9 +144,10 @@ class SettingsFragment : GuidedStepSupportFragment() {
 
     override fun onResume() {
         super.onResume()
-        if (availableGenres.isNotEmpty()) updateGenreAction(availableGenres)
-        if (availableAges.isNotEmpty()) updateAgeRatingAction(availableAges)
-        if (availableYears.isNotEmpty()) updateYearAction(availableYears)
+        // Update descriptions dynamically on resume
+        updateGenreAction(availableGenres)
+        updateAgeRatingAction(availableAges)
+        updateYearAction(availableYears)
         refreshAllData()
     }
 
@@ -250,8 +251,19 @@ class SettingsFragment : GuidedStepSupportFragment() {
         val genreActionIndex = actions.indexOfFirst { it.id == ACTION_ID_GENRE }
         if (genreActionIndex != -1) {
             val genreAction = actions[genreActionIndex]
-            val genreFilter = PreferencesManager.genreFilter
-            genreAction.description = if (genreFilter.isNotEmpty()) genreFilter else "All"
+            val genreFilterString = PreferencesManager.genreFilter
+            
+            val descriptionText = if (genreFilterString.isEmpty()) {
+                "All"
+            } else {
+                val selectedCount = genreFilterString.split(",").filter { it.isNotBlank() }.size
+                if (selectedCount == availableGenres.size) {
+                    "All"
+                } else {
+                    "$selectedCount selected"
+                }
+            }
+            genreAction.description = descriptionText
             genreAction.subActions = null 
             notifyActionChanged(genreActionIndex)
         }
@@ -265,8 +277,19 @@ class SettingsFragment : GuidedStepSupportFragment() {
         val ageActionIndex = actions.indexOfFirst { it.id == ACTION_ID_AGE }
         if (ageActionIndex != -1) {
             val ageAction = actions[ageActionIndex]
-            val ageFilter = PreferencesManager.ageFilter
-            ageAction.description = if (ageFilter.isNotEmpty()) ageFilter else "Any"
+            val ageFilterString = PreferencesManager.ageFilter
+            
+            val descriptionText = if (ageFilterString.isEmpty()) {
+                "Any"
+            } else {
+                val selectedCount = ageFilterString.split(",").filter { it.isNotBlank() }.size
+                if (selectedCount == availableAges.size) {
+                    "Any"
+                } else {
+                    "$selectedCount selected"
+                }
+            }
+            ageAction.description = descriptionText
             ageAction.subActions = null 
             notifyActionChanged(ageActionIndex)
         }
@@ -281,7 +304,12 @@ class SettingsFragment : GuidedStepSupportFragment() {
         if (yearActionIndex != -1) {
             val yearAction = actions[yearActionIndex]
             val yearFilter = PreferencesManager.yearFilter
-            yearAction.description = if (yearFilter.isNotEmpty()) yearFilter else "Any"
+            val descriptionText = if (yearFilter.isEmpty()) {
+                "Any"
+            } else {
+                yearFilter // Already formatted as YYYY or YYYY-YYYY
+            }
+            yearAction.description = descriptionText
             yearAction.subActions = null
             notifyActionChanged(yearActionIndex)
         }

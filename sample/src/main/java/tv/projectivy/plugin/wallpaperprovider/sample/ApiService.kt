@@ -14,8 +14,9 @@ interface ApiService {
     fun getWallpaperStatus(
         @Query("layout") layout: String,
         @Query("genre") genre: String? = null,
-        @Query("age") age: String? = null,
-        @Query("year") year: String? = null,
+        @Query("age_rating") ageRating: String? = null,
+        @Query("min_year") minYear: String? = null,
+        @Query("max_year") maxYear: String? = null,
         @Query("min_rating") minRating: Float? = null,
         @Query("max_rating") maxRating: Float? = null
     ): Call<WallpaperStatus>

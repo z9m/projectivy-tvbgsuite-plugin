@@ -77,9 +77,32 @@ class WallpaperProviderService: Service() {
                 Log.e("WallpaperService", "PROJECTIVY_LOG: Executing API refresh...")
                 val serverUrl = PreferencesManager.serverUrl
                 val selectedLayout = PreferencesManager.selectedLayout
-                val genreFilter = PreferencesManager.genreFilter.ifEmpty { null }
-                val ageFilter = PreferencesManager.ageFilter.ifEmpty { null }
-                val yearFilter = PreferencesManager.yearFilter.ifEmpty { null }
+
+                val genreFilterString = PreferencesManager.genreFilter.ifEmpty { null }
+                val ageFilterString = PreferencesManager.ageFilter.ifEmpty { null }
+                
+                val yearFilterString = PreferencesManager.yearFilter
+                var minYearParam: String? = null
+                var maxYearParam: String? = null
+
+                if (yearFilterString.isNotBlank()) {
+                    if (yearFilterString.contains("-")) {
+                        val parts = yearFilterString.split("-")
+                        if (parts.size == 2) {
+                            minYearParam = parts[0].trim()
+                            maxYearParam = parts[1].trim()
+                        } else {
+                            // Invalid range format, treat as single year if possible or ignore
+                            minYearParam = yearFilterString.trim()
+                            maxYearParam = yearFilterString.trim()
+                        }
+                    } else {
+                        // Single year
+                        minYearParam = yearFilterString.trim()
+                        maxYearParam = yearFilterString.trim()
+                    }
+                }
+
                 val minRating = PreferencesManager.minRating
                 val maxRating = PreferencesManager.maxRating
 
@@ -94,9 +117,10 @@ class WallpaperProviderService: Service() {
 
                     val response = apiService.getWallpaperStatus(
                         layout = selectedLayout,
-                        genre = genreFilter,
-                        age = ageFilter,
-                        year = yearFilter,
+                        genre = genreFilterString,
+                        ageRating = ageFilterString,
+                        minYear = minYearParam,
+                        maxYear = maxYearParam,
                         minRating = if (minRating > 0.0f) minRating else null,
                         maxRating = if (maxRating < 10.0f) maxRating else null
                     ).execute()
@@ -133,7 +157,7 @@ class WallpaperProviderService: Service() {
                     Log.e("WallpaperService", "PROJECTIVY_LOG: AIDL Error", e)
                 }
             } else {
-                Log.e("WallpaperService", "PROJECTIVY_LOG: Event type ${event?.javaClass?.simpleName} not handled for refresh or forceRefresh is false.")
+                Log.e("WallpaperService", "PROJECTIVY_LOG: Event type ${event?.javaClass?.simpleName} not handled by service for refresh.")
             }
             return emptyList()
         }
