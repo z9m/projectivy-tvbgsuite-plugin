@@ -119,6 +119,10 @@ object PreferencesManager {
         get() = PreferencesManager[LAST_WALLPAPER_AUTHOR_KEY, ""]
         set(value) { PreferencesManager[LAST_WALLPAPER_AUTHOR_KEY] = value }
 
+    var preferredClient: String
+        get() = PreferencesManager["preferred_client_key", "org.moonfin.androidtv"]
+        set(value) { PreferencesManager["preferred_client_key"] = value }
+
     fun export(): String {
         return convertSharedPreferencesToJson(preferences)
     }

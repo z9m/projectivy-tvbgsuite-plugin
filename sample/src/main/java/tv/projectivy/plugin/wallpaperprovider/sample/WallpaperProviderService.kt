@@ -131,8 +131,10 @@ class WallpaperProviderService: Service() {
                             var action = status.actionUrl
                             if (!action.isNullOrBlank() && action.startsWith("jellyfin://items/")) {
                                 val id = action.substringAfter("jellyfin://items/")
-                                if (isPackageInstalled("org.moonfin.androidtv")) {
-                                    action = "intent:#Intent;component=org.moonfin.androidtv/org.jellyfin.androidtv.ui.startup.StartupActivity;action=android.intent.action.VIEW;S.ItemId=$id;S.id=$id;end"
+                                val preferredClient = PreferencesManager.preferredClient
+                                val newAction = ClientManager.getClientActionUri(this@WallpaperProviderService, preferredClient, id)
+                                if (newAction != null) {
+                                    action = newAction
                                 }
                             }
                             Log.e("WallpaperService", "PROJECTIVY_LOG: API Success: ${status.imageUrl}")

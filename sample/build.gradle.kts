@@ -14,8 +14,8 @@ android {
         applicationId = "com.butch708.projectivy.tvbgsuite"
         minSdk = 23
         targetSdk = 36
-        versionCode = 33
-        versionName = "1.3.12"
+        versionCode = 34
+        versionName = "1.3.13"
 
     }
 

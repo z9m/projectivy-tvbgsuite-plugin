@@ -32,6 +32,7 @@ class SettingsFragment : GuidedStepSupportFragment() {
         private const val ACTION_ID_RATING = 7L
         private const val ACTION_ID_MAX_RATING = 8L
         private const val ACTION_ID_EVENT_IDLE = 9L
+        private const val ACTION_ID_CLIENT = 10L
         
         private val DEFAULT_GENRES = listOf(
             "Action", "Adventure", "Animation", "Comedy", "Crime",
@@ -74,6 +75,7 @@ class SettingsFragment : GuidedStepSupportFragment() {
             val minRating = PreferencesManager.minRating
             val maxRating = PreferencesManager.maxRating
             val refreshOnIdle = PreferencesManager.refreshOnIdleExit
+            val preferredClient = PreferencesManager.preferredClient
 
             // Server URL
             actions.add(GuidedAction.Builder(context)
@@ -129,6 +131,14 @@ class SettingsFragment : GuidedStepSupportFragment() {
                 .subActions(createRatingSubActions(maxRating, 3))
                 .build())
 
+            // Client Selection
+            actions.add(GuidedAction.Builder(context)
+                .id(ACTION_ID_CLIENT)
+                .title("Preferred Client")
+                .description(ClientManager.getInstalledClients(requireContext()).find { it.packageName == preferredClient }?.name ?: "Auto/Default")
+                .subActions(emptyList())
+                .build())
+
             // Events Section
             actions.add(GuidedAction.Builder(context)
                 .id(ACTION_ID_EVENT_IDLE)
@@ -148,6 +158,7 @@ class SettingsFragment : GuidedStepSupportFragment() {
         updateGenreAction(availableGenres)
         updateAgeRatingAction(availableAges)
         updateYearAction(availableYears)
+        updateClientAction()
         refreshAllData()
     }
 
@@ -315,6 +326,34 @@ class SettingsFragment : GuidedStepSupportFragment() {
         }
     }
 
+    private fun updateClientAction() {
+        val actions = actions
+        val clientActionIndex = actions.indexOfFirst { it.id == ACTION_ID_CLIENT }
+        if (clientActionIndex != -1) {
+            val clientAction = actions[clientActionIndex]
+            val clients = ClientManager.getInstalledClients(requireContext())
+            
+            // Re-populate sub-actions every time to capture any newly installed apps
+            val subActions = clients.mapIndexed { index, client ->
+                GuidedAction.Builder(context)
+                    .id(300L + index)
+                    .title(client.name)
+                    .description(client.packageName)
+                    .checkSetId(4) // CheckSet ID 4 for clients
+                    .checked(client.packageName == PreferencesManager.preferredClient)
+                    .build()
+            }
+            
+            clientAction.subActions = subActions
+            
+            // Update description
+            val currentClient = clients.find { it.packageName == PreferencesManager.preferredClient }
+            clientAction.description = currentClient?.name ?: "Select Client"
+            
+            notifyActionChanged(clientActionIndex)
+        }
+    }
+
     private fun notifySettingsChanged() {
         (requireActivity() as? SettingsActivity)?.requestWallpaperUpdate()
     }
@@ -378,6 +417,13 @@ class SettingsFragment : GuidedStepSupportFragment() {
             }
             notifySettingsChanged()
             return true
+        } else if (action.checkSetId == 4) {
+             // Client selection
+             val selectedPackage = action.description.toString()
+             PreferencesManager.preferredClient = selectedPackage
+             updateClientAction() // Refresh UI (checkmarks and description)
+             notifySettingsChanged()
+             return true
         }
         return super.onSubGuidedActionClicked(action)
     }

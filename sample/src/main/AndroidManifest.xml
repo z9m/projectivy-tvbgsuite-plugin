@@ -16,6 +16,11 @@
     <queries>
         <package android:name="com.spocky.projengmenu" />
         <package android:name="org.moonfin.androidtv" />
+        <package android:name="org.jellyfin.androidtv" />
+        <package android:name="nl.jknaapen.fladder" />
+        <package android:name="org.xbmc.kodi" />
+        <package android:name="com.github.damontecres.wholphin" />
+        <package android:name="com.hritwik.avoid" />
     </queries>
 
     <application
@@ -103,6 +108,14 @@
                 android:name="tv.projectivy.launcher.wallpaper.updateMode"
                 android:value="1" />
         </service>
+
+        <receiver
+            android:name="tv.projectivy.plugin.wallpaperprovider.sample.WallpaperEventReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="tv.projectivy.launcher.action.REFRESH_WALLPAPER" />
+            </intent-filter>
+        </receiver>
 
     </application>
 
