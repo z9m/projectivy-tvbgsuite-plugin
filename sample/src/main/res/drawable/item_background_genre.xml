@@ -1,37 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Focused & Selected: Accent background + White Border -->
-    <item android:state_focused="true" android:state_selected="true">
+    <!-- Focused & Selected (Checked): Accent background, No Border (Clean look) -->
+    <item android:state_focused="true" android:state_checked="true">
         <shape android:shape="rectangle">
-            <corners android:radius="4dp"/>
+            <corners android:radius="2dp"/>
             <solid android:color="@color/color_accent"/>
-            <stroke android:width="2dp" android:color="#FFFFFF"/>
         </shape>
     </item>
 
     <!-- Focused: Lighter Gray background + White Border -->
     <item android:state_focused="true">
         <shape android:shape="rectangle">
-            <corners android:radius="4dp"/>
+            <corners android:radius="2dp"/>
             <solid android:color="#555555"/>
             <stroke android:width="2dp" android:color="#FFFFFF"/>
         </shape>
     </item>
 
-    <!-- Selected: Accent background (Range) -->
-    <item android:state_selected="true">
+    <!-- Selected (Checked): Accent background, No border -->
+    <item android:state_checked="true">
         <shape android:shape="rectangle">
-            <corners android:radius="4dp"/>
+            <corners android:radius="2dp"/>
             <solid android:color="@color/color_accent"/>
         </shape>
     </item>
 
-    <!-- Default: Transparent/Dark -->
+    <!-- Default: Dark Gray background -->
     <item>
         <shape android:shape="rectangle">
-            <corners android:radius="4dp"/>
-            <!-- Slightly visible to show grid structure, or transparent -->
-            <solid android:color="#222222"/> 
+            <corners android:radius="2dp"/>
+            <solid android:color="#333333"/>
         </shape>
     </item>
 </selector>
