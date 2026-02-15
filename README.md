@@ -8,9 +8,17 @@ It allows you to display metadata-driven wallpapers (e.g., Movies, TV Shows) on 
 ## Features
 
 *   **Dynamic Wallpapers**: Fetches high-quality wallpapers based on your collection layout.
-*   **Deep Linking (Play Button)**:
-    *   **Dual-Client Support**: Automatically detects if the **Moonfin** client (`org.moonfin.androidtv`) is installed and launches it with a specific intent.
-    *   **Fallback**: Falls back to the standard **Jellyfin** app if Moonfin is not present.
+*   **Client Selection & Deep Linking**:
+    *   **Preferred Client**: Select your preferred Jellyfin player from the settings.
+    *   **Deep Link Support** (Opens directly to the media item):
+        *   **Moonfin** (`org.moonfin.androidtv`)
+        *   **Jellyfin** (`org.jellyfin.androidtv`)
+    *   **App Launch Support** (Opens the player's main menu):
+        *   **Kodi** (`org.xbmc.kodi`)
+        *   **Fladder** (`nl.jknaapen.fladder`)
+        *   **Wholphin** (`com.github.damontecres.wholphin`)
+        *   **Void** (`com.hritwik.avoid`)
+    *   *Note: Deep linking is only available for clients that plainly support external Android Intents for specific items.*
 *   **Customizable Filters**:
     *   **Genre**: Filter content by genres (Action, Comedy, Drama, Sci-Fi, etc.), fetched dynamically from the server.
     *   **Age Rating**: Filter by age ratings (G, PG, R, FSK, etc.), fetched dynamically from the server.
@@ -30,6 +38,7 @@ It allows you to display metadata-driven wallpapers (e.g., Movies, TV Shows) on 
     *   Click on the **Settings** (gear icon) next to the plugin name.
     *   **Server URL**: Enter the URL of your **TV Background Suite** backend (e.g., `http://192.168.1.x:5000`).
     *   **Collection / Layout**: Select which library/layout to fetch wallpapers from.
+    *   **Preferred Client**: Choose your media player (e.g., Moonfin, Jellyfin) for opening content.
     *   **Filters**: Adjust Genre, Age Rating and Year as desired.
 5.  **Enjoy**: Your background will now update based on your preferences.
 
